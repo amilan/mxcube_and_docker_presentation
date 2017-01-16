@@ -373,7 +373,7 @@
 					4. Disable Supervisor in your container.
 					5. Run the services manually.
 
-					**Looks more difficult that what it is.**
+					**Looks more difficult than what it is.**
 
 					--
 
@@ -459,12 +459,14 @@
 
 					# Docker compose
 
-          A nice tool to orchestrate several docker containers and manage your microservices.
+					--
 
-          Configurable with a .yml file.
+					A nice tool to orchestrate several docker containers and manage your microservices.
 
-          ```
-          version: '2'
+					Configurable with a .yml file.
+
+					```
+					version: '2'
           services:
             mxcube:
               build: .
@@ -485,62 +487,60 @@
                 - "6379:6379"
               volumes:
                 - ./data:/data
-          ```
+					```
 
-          Note:
-          Now we go for the microservices.
+					Note:
+					Now we go for the microservices.
 
-          --
+					--
 
-          And then:
+					And then:
 
-          ```bash
-          docker-compose build
-          docker-compose up
-          ```
+					```bash
+					docker-compose build
+					docker-compose up
+					```
 
-          And the magic happens.
+					And the magic happens.
 
-          Note:
-          Get back to the magic gif.
+					Note:
+					Get back to the magic gif.
 
-          ---
+					---
 
-          Repo available here:
-          https://github.com/amilan/mxcube_web
+					Repo available here:
+					https://github.com/amilan/mxcube_web
 
+					---
 
-          ---
+					# Docker registry
 
-          # Docker registry
+					Basically it's like a repository of images.
 
-          Basically it's like a repository of images.
-          Docker hub is the official one, but we can have our own one in Max IV.
+					Docker hub is the official one, but we can you can have your own one.
 
-          It provides:
-            - Storage for our containers.
-            - Push and pull commands (for maintenance).
-            - Notification system (Webhooks)
-            - Able to connect to a Continuous Integration / Delivery system.
+					It provides:
+					- Storage for your containers.
+					- Push and pull commands (for maintenance).
+					- Notification system (webhooks)
+					- Able to connect to a Continuous Integration / Delivery system.
 
-          ---
+					---
 
-          # Ansible integration?
+					# Ansible integration?
 
-          Why not? It will provide:
-            - Flexibility:
-              - Portable playbooks
-              - Reproducible environments (using docker, vagrant, etc.)
+					Why not? It will provide:
+					- Flexibility:
+						- Portable playbooks
+						- Reproducible environments (using docker, vagrant, etc)
+					- Auditability: Simple to review and update content in a container.
+					- Ubiquity: You can manage container environments and also host environments.
 
-            - Auditability: Simple to review and update content in a container.
-
-            - Ubiquity: You can manage containers environments and also host environments.
-
-	          Note:
-	          Some benefits:
-	          		- Flexibility: re-use it.
-	              - Auditability: Easy to review and update content.
-	              - Ubiquity: Manage the whole ecosystem.
+					Note:
+					Some benefits:
+						- Flexibility: re-use it.
+						- Auditability: Easy to review and update content.
+						- Ubiquity: Manage the whole ecosystem.
 				</script>
       </section>
 
