@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Playing with Docker containers</title>
+	<link rel="stylesheet" href="css/reveal.css">
+	<link rel="stylesheet" href="css/theme/my_white.css">
+	<!-- <link rel="stylesheet" href="css/theme/beige.css"> -->
+
+  <!--Add support for earlier versions of Internet Explorer -->
+	<!--[if lt IE 9]>
+	<script src="lib/js/html5shiv.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<!-- Wrap the entire slide show in a div using the "reveal" class. -->
+	<div class="reveal">
+		<!-- Wrap all slides in a single "slides" class -->
+		<div class="slides">
+
+			<!-- ALL SLIDES GO HERE -->
+			<!-- Each section element contains an individual slide -->
+			<section>
+				<h1>Using Docker for MxCUBE development at Max IV</h1>
+				<p>Antonio Milán Otero</p>
+        <p>KITS - 2017</p>
+        <aside class="notes" data-markdown>
+        Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+        </aside>
+			</section>
+<!--
+      <section data-markdown>
+        # What Docker is
+
+         ... but first ...
+
+         Note:
+         This note is not suppost to appear.
+      </section>
+
+      <section>
+          <h1>What I'm not</h1>
+          <h6 class="fragment" data-fragment-index="1">I'm not a Docker expert!!</h2>
+          <img class="fragment"
+               class="stretch"
+               data-fragment-index="1"
+               data-src="images/expert.jpg">
+      </section>
+-->
+      <!-- Slides are separated by newline + three dashes + newline, vertical slides identical but two dashes -->
+      <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+        <script type="text/template">
+					# Overview
+					- What is Docker?
+					- How does it work?
+					- How we use it for MxCUBE
+					- How to create a container
+					- Services
+					- Other tools
+
+					---
+
+					# What is Docker?
+
+					Docker containers wrap a piece of software in a complete filesystem that contains everything needed to run:
+
+					- Code
+					- Runtime
+					- System tools
+					- System libraries
+
+					This guarantees that __the software will always run the same, regardless of its environment.__
+
+				</script>
+			</section>
+
+      <section>
+          <h1>What Docker is NOT</h1>
+          <h6>It's not a Virtual Machine</h6>
+          <img class="stretch"
+               data-src="images/VMvsContainer.png">
+          <p>Virtual Machines include: Application, binaries, libraries and the entire guest OS.</p>
+          <p>Containers include the application and its dependencies.</p>
+          <p>Run in an <b>isolated process</b> in user space on the host operating system.</p>
+          <aside class="notes" data-markdown>
+          * VM: app, libs and entire guest os.
+          * Containers: app and libs accessing the same kernel.
+          * Isolated process.
+          </aside>
+      </section>
+
+      <section data-background="images/WTF.gif"
+               data-background-transition="zoom">
+               <h6><font color="white">Maybe now you feel like ...</font></h6>
+      </section>
+
+      <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+        <script type="text/template">
+					Imagine you have an app and its dependencies to deploy.
+
+					![container](images/container_2.png)
+
+					--
+
+					You put it all together on the container.
+
+					![container](images/container_4.png)
+
+					--
+
+					Ship it together.
+
+					![container](images/container_3.jpg)
+
+					--
+
+					More details on:
+
+					http://www.docker.com/what-docker
+
+					https://docs.docker.com/engine/understanding-docker/
+
+					---
+
+					# How does it works?
+
+					3 main components:
+					- Images
+					- Containers
+					- Registries
+
+					--
+
+					# Architecture
+
+					![architecture](images/architecture.svg)
+
+					---
+
+					# How we used it for MxCUBE
+					## ... but first let's put you on context ...
+
+					In our previous meeting in Hamburg, we ran a workshop to show & help
+					with the MxCUBE 3 installation process.
+
+					We wanted to let the people experiment with our application, but at
+					the end we discovered that they were having plenty of problems to
+					install it and run it.
+
+					--
+
+					# Use case 1: Distributing a mockup version for newcomers
+
+					So, we decided to distribute a VM to make easier for newcomers to test
+					the app.
+
+					But why to use a VM when we can use a docker container and simplify
+					the process and reduce the weight?
+
+					--
+
+					# Use case 2: Development environment
+
+					Docker it's so nice that after playing with it, we started to consider
+					its usage as a development environment.
+
+					--
+
+					# Use case 3: Deployment environment
+
+					Also, it will not be so complex to use it for deployment.
+
+					But we are not there yet.
+
+					Note:
+					But again.
+
+
+        </script>
+      </section>
+
+<!--
+      <section data-background="images/Sorry.gif"
+               data-background-transition="zoom">
+               <p><font color="white">But we are not there yet ... again</font></p>
+      </section>
+-->
+
+      <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+        <script type="text/template">
+          # MxCUBE 3 overview
+
+          As you know, MxCUBE 3 is composed by 3 main services:
+
+            - Redis
+            - NPM
+            - MxCUBE
+
+          __Good Practice__: Split your monolithic application into several microservices.
+
+          Note:
+          * Monolithic or microservices should be studied independently.
+          * To keep it simple we started with the monolithic solution ... should I
+          get back to the previous slide?
+
+          ---
+
+          ## First thing first: How to build a docker image. Dockerfile
+
+          Here we define everything needed in our container to run the app, and also the configuration that has to be done.
+
+          ```
+          ##############################################################################
+          # Dockerfile to run MXCuBE web server
+          ##############################################################################
+
+          FROM centos:7
+          MAINTAINER Antonio Milan Otero <antonio.milan_otero.maxiv.lu.se>
+          ```
+
+          --
+
+          Then you install whatever is needed in your container.
+
+          ```
+          # Install ####
+          RUN yum install -y curl
+          RUN curl --silent --location https://rpm.nodesource.com/setup_4.x | bash -
+
+          RUN yum install -y gcc-c++ make
+          # or: yum groupinstall 'Development Tools'
+
+          # Install nodejs from epel repository ####
+          RUN yum install -y nodejs npm
+
+          # Install more dependencies ####
+          RUN yum install -y \
+                  python-devel \
+                  openldap-devel \
+                  lapack-devel \
+                  zlib-devel \
+                  libjpeg-turbo-devel \
+                  libxml2-devel \
+                  libxslt-devel \
+                  openssl-devel \
+                  libgfortran \
+                  cyrus-sasl-devel
+          ```
+
+          --
+
+          Then we get the latest version of the app.
+
+					In the future it will be pointing official releases.
+
+          ```
+          # Install git ####
+          RUN yum install -y git
+
+          # Get MxCUBE code ####
+          RUN mkdir /mxcube
+          WORKDIR /mxcube
+          RUN git clone https://github.com/mxcube/mxcube3.git --recursive
+          WORKDIR mxcube3
+          ```
+
+          --
+
+          After that, more dependencies are installed
+
+          ```
+          # Install EPEL repository ####
+          RUN yum install -y epel-release
+          RUN yum makecache # && yum update -y
+
+          # Install python pip ####
+          RUN yum install -y python-pip
+          RUN yum install -y redis
+
+          # Install requirements ####
+          RUN pip install -r requirements.txt
+
+          # Install supervisor
+          RUN pip install supervisor
+
+          # Install npm ####
+          RUN npm install
+          RUN npm install fabric
+          RUN npm install --dev
+          ```
+
+          --
+
+          Some configuration now.
+
+          ```
+          RUN cp backend_server.js.example backend_server.js
+
+          COPY supervisord.conf /etc/supervisor/supervisord.conf
+
+          COPY run_mxcube /usr/local/bin/
+
+          EXPOSE 8090
+
+          CMD ["/usr/bin/supervisord"]
+          ```
+
+          --
+
+          We use supervisor in order to run and monitor all the processes.
+          More details here:
+          http://supervisord.org/
+
+          Supervisor configuration example:
+
+          ```
+          [supervisord]
+          nodaemon=true
+
+          [program:redis]
+          command=redis-server
+
+          [program:mxcube]
+          command=python mxcube3-server -r test/HardwareObjectsMockup.xml --log-file mxcube.log
+
+          [program:npm]
+          command=npm start
+          ```
+
+          --
+
+          # And run it
+
+          ```bash
+          docker build -t mxcube_web .
+          docker run -i -p 8090:8090 -t mxcube_web
+          ```
+
+          ![alt text](images/mxcube_1.png)
+
+          ---
+
+					# Use case 1: Distributing a mockup
+
+          Actually you don't need to build anything, it's already available in docker hub.
+
+					So, execute:
+
+          ```bash
+          docker run -i -p 8090:8090 -t amilan/mxcube_web
+          ```
+          And enjoy it.
+          ![alt text](images/mxcube_2.png)
+        </script>
+      </section>
+
+      <section data-background="images/like_magic.gif"
+               data-background-transition="zoom">
+               <p></p>
+      </section>
+
+      <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+        <script type="text/template">
+					# Use case 2: Development environment
+
+					You can use it also as a part of your development environment as a test bench.
+
+					One way of doing that is:
+					1. Get the latest image.
+					2. Clone the mxcube3 repository in your host.
+					3. Run the container mounting your host folder.
+					4. Disable Supervisor in your container.
+					5. Run the services manually.
+
+					**Looks more difficult that what it is.**
+
+					--
+
+					# 1- Get the latest image
+
+					```
+					docker pull amilan/mxcube_web
+					```
+
+					--
+
+					# 2- Clone the mxcube3 repository
+
+					```
+					git clone https://github.com/mxcube/mxcube3.git
+					```
+
+					--
+
+					# 3- Run the container mounting your host folder
+
+					```
+					docker run -i -p 8090:8090 -v /Path/to/your/repo/mxcube3:/mxcube/mxcube3 --name mxcube3 -t amilan/mxcube_web
+					```
+
+					* See details about installing npm in the documentation.
+
+					--
+
+					# 4- Disable Supervisor
+
+					Edit the file: /etc/supervisor/supervisord.conf and let only this:
+
+					```
+					[supervisord]
+					nodaemon=true
+
+					[program:redis]
+					command=redis-server
+
+					# [program:mxcube]
+					# command=python mxcube3-server -r test/HardwareObjectsMockup.xml --log-file mxcube.log
+
+					# [program:npm]
+					# command=npm start
+					```
+
+					And then, restart the container:
+
+					```
+					docker restart mxcube3
+					```
+
+					--
+
+					# 5- Run the services manually
+
+					```
+					docker exec -it mxcube3 redis-server
+					docker exec -it mxcube3 python mxcube3-server -r test/HardwareObjectsMockup.xml --log-file mxcube.log
+					docker exec -it mxcube3 npm start
+					```
+
+					--
+
+					More detailed info here:
+
+					https://github.com/amilan/mxcube_web
+
+					---
+
+					# Use case 3: Deployment environment
+
+					Not used yet ... maybe one day ...
+
+					---
+
+					# Extra time for some more Docker stuff?
+
+					If not, jump to slide 18.
+
+					---
+
+					# Docker compose
+
+          A nice tool to orchestrate several docker containers and manage your microservices.
+
+          Configurable with a .yml file.
+
+          ```
+          version: '2'
+          services:
+            mxcube:
+              build: .
+              expose:
+                - "8081"
+              ports:
+                - "8081:8081"
+              links:
+                - redis
+              command: python mxcube3-server -r test/HardwareObjectsMockup.xml --log-file /tmp/mxcube.log
+              volumes:
+                - ./tmp:/tmp
+            redis:
+              image: redis
+              expose:
+                - "6379"
+              ports:
+                - "6379:6379"
+              volumes:
+                - ./data:/data
+          ```
+
+          Note:
+          Now we go for the microservices.
+
+          --
+
+          And then:
+
+          ```bash
+          docker-compose build
+          docker-compose up
+          ```
+
+          And the magic happens.
+
+          Note:
+          Get back to the magic gif.
+
+          ---
+
+          Repo available here:
+          https://github.com/amilan/mxcube_web
+
+
+          ---
+
+          # Docker registry
+
+          Basically it's like a repository of images.
+          Docker hub is the official one, but we can have our own one in Max IV.
+
+          It provides:
+            - Storage for our containers.
+            - Push and pull commands (for maintenance).
+            - Notification system (Webhooks)
+            - Able to connect to a Continuous Integration / Delivery system.
+
+          ---
+
+          # Ansible integration?
+
+          Why not? It will provide:
+            - Flexibility:
+              - Portable playbooks
+              - Reproducible environments (using docker, vagrant, etc.)
+
+            - Auditability: Simple to review and update content in a container.
+
+            - Ubiquity: You can manage containers environments and also host environments.
+
+	          Note:
+	          Some benefits:
+	          		- Flexibility: re-use it.
+	              - Auditability: Easy to review and update content.
+	              - Ubiquity: Manage the whole ecosystem.
+				</script>
+      </section>
+
+			<section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+				<script type="text/template">
+					# Docker Swarm
+
+					It provides features to orchestrate a cluster of Docker Engines.
+
+					Main features:
+					- Cluster management
+					- Decentralized design
+					- Declarative service model
+					- Scaling
+					- Desired state reconciliation
+					- Multi-host networking
+					- Service discovery
+					- Load balancing
+					- Secure by default
+					- Rolling updates
+
+        </script>
+      </section>
+
+      <section data-background="images/Jordan_question.gif"
+               data-background-transition="zoom">
+               <!-- <h1><font color="black" size=36px>Any questions?</font></h1> -->
+               <h1>Any questions?</h1>
+      </section>
+
+<!--
+      <section>
+        <h1>Thanks for your attention!</h1>
+        <p>docker hub: https://hub.docker.com/r/amilan/mxcube_web/</p>
+        <p>github: https://github.com/amilan/mxcube_web</p>
+      </section>
+-->
+      <!-- Slides are separated by newline + three dashes + newline, vertical slides identical but two dashes -->
+      <section data-markdown data-separator="^\n---\n$" data-separator-vertical="^\n--\n$">
+        <script type="text/template">
+          # Thanks for your attention!
+
+          ![alt text](images/docker.png)
+
+          https://hub.docker.com/r/amilan/mxcube_web/
+
+
+          ![alt text](images/github.png)
+
+          https://github.com/amilan/mxcube_web
+        </script>
+      </section>
+
+<!--
+			<section id="show-a-link">
+				<h1>Show a live link</h1>
+				<p>Slide 2 discussed here</p>
+				<p>See <a href="http://www.htmlcheats.com">HTMLCheats.com</a><p>
+			</section>
+
+			<section>
+				<h1>Slide 3</h1>
+				<p>How does one revisit an arbitrary slide in code?</p>
+				<p>Visit internal slide<a href="#/show-a-link"> 2</a>
+			</section>
+
+      <section data-background="images/maxiv_winter1.jpg"
+               data-background-transition="zoom">
+               Slide 1</section>
+      <section data-background="images/Sorry.gif"
+               data-background-transition="zoom">
+               Sorry!</section>
+      <section>
+        <section>vertical Slide 1</section>
+        <section>vertical Slide 2</section>
+      </section>
+      <section>Slide 2</section>
+
+      <section data-markdown>
+        <script type="text/template">
+          # Page title
+
+          A paragraph with some text and a [link](http://hakim.se).
+        </script>
+      </section>
+
+      <!-- If you want to get external files, you need to run a local web server.
+           More info here:
+           https://github.com/hakimel/reveal.js#full-setup
+      <section data-markdown="my_slides/example.md"
+               data-separator="^\n\n\n"
+               data-separator-vertical="^\n\n"
+               data-separator-notes="^Note:"
+               data-charset="iso-8859-15">
+      </section>
+    -->
+			</div>
+	</div>
+	<script src="lib/js/head.min.js"></script>
+	<script src="js/reveal.js"></script>
+
+	<script>
+		// Required, even if empty.
+		Reveal.initialize({
+      // More info https://github.com/hakimel/reveal.js#dependencies
+      // Display a presentation progress bar
+      progress: true,
+
+      // Display the page number of the current slide
+      slideNumber: true,
+
+      // Enable keyboard shortcuts for navigation
+      keyboard: true,
+
+      // Turns fragments on and off globally
+      fragments: true,
+
+      // Hides the address bar on mobile devices
+      hideAddressBar: true,
+
+      dependencies: [
+        { src: 'plugin/markdown/marked.js' },
+        { src: 'plugin/markdown/markdown.js' },
+        { src: 'plugin/notes/notes.js', async: true },
+        { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+      ]
+		});
+	</script>
+</body>
+</html>
